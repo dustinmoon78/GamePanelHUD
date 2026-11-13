@@ -1,4 +1,4 @@
-#if !UNITY_EDITOR
+﻿#if !UNITY_EDITOR
 
 using System;
 using System.IO;
@@ -9,8 +9,8 @@ using UnityEngine;
 
 namespace GamePanelHUDMap
 {
-    [BepInPlugin("com.kmyuhkyuk.GamePanelHUDMap", "GamePanelHUDMap", "4.0.0")]
-    [BepInDependency("com.kmyuhkyuk.GamePanelHUDCore")]
+    [BepInPlugin("com.kmyuhkyuk.gamepanelhudmap", "GamePanelHUDMap", "4.0.0")]
+    [BepInDependency("com.kmyuhkyuk.gamepanelhudcore")]
     public class GamePanelHUDMapPlugin : BaseUnityPlugin, KmyTarkovUtils.IUpdate
     {
         private GamePanelHUDCorePlugin.HUDCoreClass HUDCore

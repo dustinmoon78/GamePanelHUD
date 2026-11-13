@@ -12,8 +12,8 @@ using UnityEngine;
 
 namespace GamePanelHUDDebug.MagDebug
 {
-    [BepInPlugin("com.kmyuhkyuk.AnimatorStateRecord", "AnimatorStateRecord", "1.0.0")]
-    [BepInDependency("com.kmyuhkyuk.GamePanelHUDCore")]
+    [BepInPlugin("com.kmyuhkyuk.animatorstaterecord", "AnimatorStateRecord", "1.0.0")]
+    [BepInDependency("com.kmyuhkyuk.gamepanelhudcore")]
     public class AnimatorStateRecord : BaseUnityPlugin
     {
         private GamePanelHUDCorePlugin.HUDCoreClass HUDCore
