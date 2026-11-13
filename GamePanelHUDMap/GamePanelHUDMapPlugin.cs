@@ -9,8 +9,8 @@ using UnityEngine;
 
 namespace GamePanelHUDMap
 {
-    [BepInPlugin("com.kmyuhkyuk.gamepanelhudmap", "GamePanelHUDMap", "4.0.0")]
-    [BepInDependency("com.kmyuhkyuk.gamepanelhudcore")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudmap", "GamePanelHUDMap", "4.0.0")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore")]
     public class GamePanelHUDMapPlugin : BaseUnityPlugin, KmyTarkovUtils.IUpdate
     {
         private GamePanelHUDCorePlugin.HUDCoreClass HUDCore

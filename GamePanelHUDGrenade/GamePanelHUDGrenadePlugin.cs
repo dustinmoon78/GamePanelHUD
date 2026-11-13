@@ -8,8 +8,8 @@ using SettingsModel = GamePanelHUDGrenade.Models.SettingsModel;
 
 namespace GamePanelHUDGrenade
 {
-    [BepInPlugin("com.kmyuhkyuk.gamepanelhudgrenade", "GamePanelHUDGrenade", "4.0.0")]
-    [BepInDependency("com.kmyuhkyuk.gamepanelhudcore", "4.0.0")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudgrenade", "GamePanelHUDGrenade", "4.0.0")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.0")]
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"localized\grenade")]
     public class GamePanelHUDGrenadePlugin : BaseUnityPlugin
     {

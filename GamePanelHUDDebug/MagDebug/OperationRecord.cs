@@ -9,8 +9,8 @@ using HarmonyLib;
 
 namespace GamePanelHUDDebug.MagDebug
 {
-    [BepInPlugin("com.kmyuhkyuk.operationrecord", "OperationRecord", "1.0.0")]
-    [BepInDependency("com.kmyuhkyuk.gamepanelhudcore")]
+    [BepInPlugin("com.dustinmoon78.operationrecord", "OperationRecord", "1.0.0")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore")]
     public class OperationRecord : BaseUnityPlugin
     {
         private GamePanelHUDCorePlugin.HUDCoreClass HUDCore

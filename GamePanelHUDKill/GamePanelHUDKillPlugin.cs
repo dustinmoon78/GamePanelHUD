@@ -10,8 +10,8 @@ using SettingsModel = GamePanelHUDKill.Models.SettingsModel;
 
 namespace GamePanelHUDKill
 {
-    [BepInPlugin("com.kmyuhkyuk.gamepanelhudkill", "GamePanelHUDKill", "4.0.0")]
-    [BepInDependency("com.kmyuhkyuk.gamepanelhudcore", "4.0.0")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudkill", "GamePanelHUDKill", "4.0.0")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.0")]
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"localized\kill")]
     public partial class GamePanelHUDKillPlugin : BaseUnityPlugin
     {

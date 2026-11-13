@@ -14,8 +14,8 @@ using EFT.Ballistics;
 
 namespace GamePanelHUDHit
 {
-    [BepInPlugin("com.kmyuhkyuk.gamepanelhudhit", "GamePanelHUDHit", "4.0.0")]
-    [BepInDependency("com.kmyuhkyuk.gamepanelhudcore", "4.0.0")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudhit", "GamePanelHUDHit", "4.0.0")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.0")]
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"localized\hit")]
     public partial class GamePanelHUDHitPlugin : BaseUnityPlugin
     {
