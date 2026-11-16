@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Game client reference assemblies (copyright game vendor; not redistributable)
+refs/

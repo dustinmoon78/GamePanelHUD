@@ -50,6 +50,12 @@
     <Reference Include="UnityEngine.UIModule">
       <HintPath>..\refs\UnityEngine.UIModule.dll</HintPath>
     </Reference>
+  <Reference Include="Newtonsoft.Json">
+      <HintPath>..\refs\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SPT.Common">
+      <HintPath>..\refs\spt-common.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

@@ -44,6 +44,12 @@ namespace GamePanelHUDCompass.Views
 
         public string zoneId;
 
+        /// <summary>直接给的显示名，非空时压过 nameKey 的本地化结果</summary>
+        public string nameText;
+
+        /// <summary>直接给的描述，非空时压过 descriptionKey 的本地化结果</summary>
+        public string descriptionText;
+
         public bool isNotNecessary;
 
         public Func<bool>[] Requirements;
@@ -103,6 +109,7 @@ namespace GamePanelHUDCompass.Views
                 case StaticModel.Type.ConditionFindItem:
                 case StaticModel.Type.ConditionVisitPlace:
                 case StaticModel.Type.ConditionInZone:
+                case StaticModel.Type.VisitZone:
                     SetSizeDelta(new Vector2(32, 32));
                     break;
                 default:
@@ -187,6 +194,17 @@ namespace GamePanelHUDCompass.Views
                     break;
                 case StaticModel.Type.ConditionVisitPlace:
                     if (settingsModel.KeyConditionVisitPlace.Value)
+                    {
+                        Other();
+                    }
+                    else
+                    {
+                        Enabled(false);
+                    }
+
+                    break;
+                case StaticModel.Type.VisitZone:
+                    if (settingsModel.KeyVisitZone.Value)
                     {
                         Other();
                     }
