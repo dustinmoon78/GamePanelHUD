@@ -216,6 +216,7 @@ namespace GamePanelHUDCompass.Views
                             case StaticModel.Type.ConditionFindItem:
                             case StaticModel.Type.ConditionVisitPlace:
                             case StaticModel.Type.ConditionInZone:
+                            case StaticModel.Type.VisitZone:
                                 questsRoot.SetAsLastSibling();
                                 break;
                             default:
@@ -236,7 +237,9 @@ namespace GamePanelHUDCompass.Views
 
                         nameValue.fontStyle = nameStyles;
                         nameValue.color = settingsModel.KeyCompassStaticNameColor.Value;
-                        nameValue.text = _LocalizedHelper.Localized(minUI.nameKey);
+                        nameValue.text = string.IsNullOrEmpty(minUI.nameText)
+                            ? _LocalizedHelper.Localized(minUI.nameKey)
+                            : minUI.nameText;
 
                         necessaryValue.gameObject.SetActive(minUI.isNotNecessary);
                         requirementsValue.gameObject.SetActive(minUI.HasRequirements);
@@ -251,7 +254,9 @@ namespace GamePanelHUDCompass.Views
 
                         descriptionValue.fontStyle = settingsModel.KeyCompassStaticDescriptionStyles.Value;
                         descriptionValue.color = settingsModel.KeyCompassStaticDescriptionColor.Value;
-                        descriptionValue.text = _LocalizedHelper.Localized(minUI.descriptionKey);
+                        descriptionValue.text = string.IsNullOrEmpty(minUI.descriptionText)
+                            ? _LocalizedHelper.Localized(minUI.descriptionKey)
+                            : minUI.descriptionText;
 
                         var distanceStyles = settingsModel.KeyCompassStaticDistanceStyles.Value;
 
@@ -315,6 +320,7 @@ namespace GamePanelHUDCompass.Views
                 case StaticModel.Type.ConditionFindItem:
                 case StaticModel.Type.ConditionVisitPlace:
                 case StaticModel.Type.ConditionInZone:
+                case StaticModel.Type.VisitZone:
                     root = questsRoot;
                     break;
                 default:
@@ -340,6 +346,11 @@ namespace GamePanelHUDCompass.Views
                 case StaticModel.Type.ConditionInZone:
                     _TraderSettingsHelper.BindAvatar(staticModel.TraderId, staticUI.BindIcon);
                     break;
+                case StaticModel.Type.VisitZone:
+                    // 与原生任务标记一致：绑任务所属商人的头像。
+                    // 剧情区域任务都属于 SORA 或对应商人，头像即「这个地点该找谁」的提示。
+                    _TraderSettingsHelper.BindAvatar(staticModel.TraderId, staticUI.BindIcon);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(staticModel.InfoType), staticModel.InfoType, null);
             }
@@ -352,6 +363,8 @@ namespace GamePanelHUDCompass.Views
             staticUI.InfoType = staticModel.InfoType;
             staticUI.Requirements = staticModel.Requirements;
             staticUI.zoneId = staticModel.ZoneId;
+            staticUI.nameText = staticModel.NameText;
+            staticUI.descriptionText = staticModel.DescriptionText;
 
             return staticUI;
         }

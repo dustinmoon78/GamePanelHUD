@@ -10,6 +10,7 @@ using KmyTarkovUtils;
 using static KmyTarkovApi.EFTHelpers;
 using GamePanelHUDCore.Models;
 using GamePanelHUDCompass.Models;
+using GamePanelHUDCompass.VisitApi;
 using SettingsModel = GamePanelHUDCompass.Models.SettingsModel;
 
 #endif
@@ -53,12 +54,123 @@ namespace GamePanelHUDCompass.Controllers
 
                     compassStaticHUDModel.CompassStatic.EquipmentAndQuestRaidItemHashSet = hashSet;
                 }
+
+                RefreshVisitZones(compassStaticHUDModel);
             }
             else
             {
                 compassStaticHUDModel.CompassStatic.EquipmentAndQuestRaidItemHashSet = null;
                 compassStaticHUDModel.AirdropCount = 0;
             }
+        }
+
+        /// <summary>区域表重建的最小间隔（秒）——任务状态变化不会有事件通知，只能低频轮询</summary>
+        private const float VisitZoneRefreshInterval = 5f;
+
+        /// <summary>
+        /// VisitAPI 剧情区域的拉取与重建。
+        ///
+        /// 流程：进战局时发一次请求（幂等）→ 后台拉回来后接走 →
+        /// 每 5 秒按「进行中任务的条件 zoneId」重建一次标记集合，多退少补。
+        /// VisitAPI 未安装时客户端拿不到区域表，整段静默跳过，不影响原生标记。
+        /// </summary>
+        private static void RefreshVisitZones(CompassStaticHUDModel compassStaticHUDModel)
+        {
+            if (!SettingsModel.Instance.KeyVisitZone.Value)
+                return;
+
+            // 首次进战局才发请求；失败也算请求过，不再重发
+            VisitZoneClient.Request();
+
+            if (VisitZoneClient.TryTake(out var zones))
+            {
+                compassStaticHUDModel.VisitZonesDirty = true;
+            }
+
+            // 区域表还没到手（首次拉取中或未装 VisitAPI）时不要清 dirty，等表到了再建
+            if (VisitZoneClient.Zones == null)
+                return;
+
+            if (!compassStaticHUDModel.VisitZonesDirty)
+                return;
+
+            if (Time.time - compassStaticHUDModel.VisitZonesLastRefresh < VisitZoneRefreshInterval)
+                return;
+
+            compassStaticHUDModel.VisitZonesLastRefresh = Time.time;
+            compassStaticHUDModel.VisitZonesDirty = false;
+
+            var hudCoreModel = HUDCoreModel.Instance;
+
+            if (hudCoreModel.YourPlayer == null || hudCoreModel.TheWorld == null)
+                return;
+
+            var models = VisitZoneStaticBuilder.Build(
+                VisitZoneClient.Zones,
+                hudCoreModel.TheWorld.LocationId,
+                hudCoreModel.TheWorld.GameDateTime?.Calculate(),
+                _AbstractQuestControllerClassHelper.Quests,
+                QuestConditionsOf);
+
+            var wanted = new HashSet<string>();
+
+            foreach (var model in models)
+            {
+                wanted.Add(model.Id);
+
+                if (compassStaticHUDModel.VisitZoneShownIds.Contains(model.Id))
+                    continue;
+
+                compassStaticHUDModel.VisitZoneShownIds.Add(model.Id);
+                compassStaticHUDModel.ShowStatic?.Invoke(model);
+            }
+
+            // 任务完成 / 离开区域的标记要撤掉，否则会一直挂在罗盘上
+            if (compassStaticHUDModel.VisitZoneShownIds.Count == 0)
+                return;
+
+            var stale = new List<string>();
+
+            foreach (var id in compassStaticHUDModel.VisitZoneShownIds)
+            {
+                if (!wanted.Contains(id))
+                    stale.Add(id);
+            }
+
+            foreach (var id in stale)
+            {
+                compassStaticHUDModel.VisitZoneShownIds.Remove(id);
+                compassStaticHUDModel.DestroyStatic?.Invoke(id);
+            }
+        }
+
+        /// <summary>
+        /// 展开任务的全部条件——原生 Compass 只处理 NecessaryConditions 顶层的四类条件，
+        /// 这里把 counterCreator 内的 VisitPlace / InZone 也解出来，才能对上 VisitAPI 的 zoneId。
+        /// </summary>
+        private static IEnumerable<object> QuestConditionsOf(Quest quest)
+        {
+            var result = new List<object>();
+
+            foreach (var condition in quest.NecessaryConditions)
+            {
+                result.Add(condition);
+
+                if (!(condition is ConditionCounterCreator counterCreator))
+                    continue;
+
+                var templateConditions = _ConditionCounterCreatorHelper.RefTemplateConditions
+                    .GetValue(counterCreator);
+
+                var conditions = _ConditionCounterTemplateHelper.RefConditions.GetValue(templateConditions);
+
+                foreach (var inner in conditions)
+                {
+                    result.Add(inner);
+                }
+            }
+
+            return result;
         }
 
         private static void OnWorldStart(GameWorld __instance)
@@ -72,6 +184,15 @@ namespace GamePanelHUDCompass.Controllers
             ShowQuest(hudCoreModel.YourPlayer.Profile, hudCoreModel.TheGame, compassStaticHUDModel.ShowStatic);
             ShowExfiltration(hudCoreModel.YourPlayer.Profile, hudCoreModel.YourPlayer.ProfileId,
                 compassStaticHUDModel.ShowStatic);
+
+            // VisitAPI 剧情区域：服务端聚合接口是异步的，这里只发请求，结果在 CustomUpdate 里收。
+            // 标记 id 集合在这里清空——上一局的标记已随 WorldDispose 整批销毁，
+            // 不清的话新一局会误判「已经创建过」而不再重建。
+            compassStaticHUDModel.VisitZoneShownIds.Clear();
+            compassStaticHUDModel.VisitZonesLastRefresh = 0f;
+            compassStaticHUDModel.VisitZonesDirty = true;
+
+            VisitZoneClient.Request();
         }
 
         // ReSharper disable once SuggestBaseTypeForParameter

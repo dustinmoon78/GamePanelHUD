@@ -1,4 +1,4 @@
-﻿#if !UNITY_EDITOR
+#if !UNITY_EDITOR
 
 using System.Diagnostics.CodeAnalysis;
 using BepInEx.Configuration;
@@ -36,6 +36,9 @@ namespace GamePanelHUDCompass.Models
         public readonly ConfigEntry<bool> KeyConditionPlaceBeacon;
         public readonly ConfigEntry<bool> KeyConditionVisitPlace;
         public readonly ConfigEntry<bool> KeyConditionInZone;
+
+        /// <summary>VisitAPI 剧情区域标记（需装 com.sora.visitapi，否则整项静默不显示）</summary>
+        public readonly ConfigEntry<bool> KeyVisitZone;
 
         public readonly ConfigEntry<Vector2> KeyAnchoredPosition;
         public readonly ConfigEntry<Vector2> KeySizeDelta;
@@ -138,6 +141,9 @@ namespace GamePanelHUDCompass.Models
             KeyConditionPlaceBeacon = configFile.Bind<bool>(questSettings, "PlaceBeacon", true);
             KeyConditionVisitPlace = configFile.Bind<bool>(questSettings, "VisitPlace", true);
             KeyConditionInZone = configFile.Bind<bool>(questSettings, "InZone", true);
+
+            KeyVisitZone = configFile.Bind<bool>(questSettings, "VisitZone (VisitAPI)",
+                true, "剧情区域的静态标记；需要装 VisitAPI（com.sora.visitapi），未装时本项不生效");
 
             KeyAnchoredPosition =
                 configFile.Bind<Vector2>(positionScaleSettings, "Anchored Position", Vector2.zero);
