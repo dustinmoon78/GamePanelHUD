@@ -344,12 +344,8 @@ namespace GamePanelHUDCompass.Views
                 case StaticModel.Type.ConditionFindItem:
                 case StaticModel.Type.ConditionVisitPlace:
                 case StaticModel.Type.ConditionInZone:
-                    _TraderSettingsHelper.BindAvatar(staticModel.TraderId, staticUI.BindIcon);
-                    break;
                 case StaticModel.Type.VisitZone:
-                    // 与原生任务标记一致：绑任务所属商人的头像。
-                    // 剧情区域任务都属于 SORA 或对应商人，头像即「这个地点该找谁」的提示。
-                    _TraderSettingsHelper.BindAvatar(staticModel.TraderId, staticUI.BindIcon);
+                    BindTraderAvatar(staticModel, staticUI);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(staticModel.InfoType), staticModel.InfoType, null);
@@ -367,6 +363,33 @@ namespace GamePanelHUDCompass.Views
             staticUI.descriptionText = staticModel.DescriptionText;
 
             return staticUI;
+        }
+
+        /// <summary>
+        /// 绑商人头像。
+        ///
+        /// BindAvatar 内部是 async void，GetAvatar 取不到商人时会回调 null。
+        /// 直接把它转给 BindIcon 会把刚设好的 sprite 清成空白，标记看起来就"消失"了——
+        /// 所以只有拿到非空头像才覆盖，失败保留默认图标并留一条记录。
+        /// </summary>
+        private static void BindTraderAvatar(StaticModel staticModel, CompassStaticUIView staticUI)
+        {
+            var traderId = staticModel.TraderId;
+
+            _TraderSettingsHelper.BindAvatar(traderId, sprite =>
+            {
+                if (sprite == null)
+                {
+                    VisitApi.VisitDiag.Write("AVATAR-NULL 头像取不到，保留默认图标 type=" +
+                                             staticModel.InfoType + " trader=" +
+                                             (string.IsNullOrEmpty(traderId) ? "(空)" : traderId) +
+                                             " id=" + staticModel.Id);
+
+                    return;
+                }
+
+                staticUI.BindIcon(sprite);
+            });
         }
 
         private static void DestroyAll(GameWorld __instance)

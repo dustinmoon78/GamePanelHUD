@@ -23,6 +23,21 @@ namespace GamePanelHUDCompass.VisitApi
         /// <param name="gameTime">游戏内时间，用于时段过滤；null 表示不做时段过滤</param>
         /// <param name="quests">玩家任务簿（QuestBook 即 BindableList&lt;Quest&gt;）</param>
         /// <param name="conditionsOf">取任务全部条件的回调（含 counterCreator 展开）</param>
+        /// <summary>本次 Build 的诊断数据（只用于排查，不参与逻辑）</summary>
+        internal static string LastDiag = "";
+
+        /// <summary>本次 Build 里出现过的 zoneId 样本（最多 8 个）</summary>
+        internal static readonly List<string> SampledZoneIds = new List<string>();
+
+        private static void Sample(string zoneId)
+        {
+            if (string.IsNullOrEmpty(zoneId) || SampledZoneIds.Contains(zoneId))
+                return;
+
+            if (SampledZoneIds.Count < 8)
+                SampledZoneIds.Add(zoneId);
+        }
+
         public static List<StaticModel> Build(
             List<VisitZone> zones,
             string locationId,
@@ -32,8 +47,15 @@ namespace GamePanelHUDCompass.VisitApi
         {
             var result = new List<StaticModel>();
 
+            SampledZoneIds.Clear();
+
             if (zones == null || zones.Count == 0 || string.IsNullOrEmpty(locationId) || quests == null)
+            {
+                LastDiag = string.Format("zones={0} loc={1} quests={2}（空输入早退）",
+                    zones?.Count ?? -1, locationId ?? "null", quests == null ? "null" : "有");
+
                 return result;
+            }
 
             var zonesById = new Dictionary<string, List<VisitZone>>(StringComparer.Ordinal);
 
@@ -52,15 +74,36 @@ namespace GamePanelHUDCompass.VisitApi
             }
 
             if (zonesById.Count == 0)
+            {
+                LastDiag = string.Format("地图={0} 区域表={1} 本图区域=0（没有区域覆盖这张图）",
+                    locationId, zones.Count);
+
                 return result;
+            }
+
+            var questTotal = 0;
+            var questStarted = 0;
+            var condTotal = 0;
+            var condExpanded = 0;
+            var zoneHit = 0;
 
             foreach (var quest in quests)
             {
                 if (quest == null)
                     continue;
 
-                if (quest.QuestStatus != EQuestStatus.Started)
+                questTotal++;
+
+                // 不只 Started：可交付（AvailableForFinish）与可接取（AvailableForStart）的地点
+                // 同样该标出来——剧情任务的目标点往往在「可交付」时还需要玩家跑一趟。
+                var status = quest.QuestStatus;
+
+                if (status != EQuestStatus.Started &&
+                    status != EQuestStatus.AvailableForFinish &&
+                    status != EQuestStatus.AvailableForStart)
                     continue;
+
+                questStarted++;
 
                 var template = quest.Template;
 
@@ -87,9 +130,25 @@ namespace GamePanelHUDCompass.VisitApi
 
                 foreach (var condition in conditions)
                 {
+                    condTotal++;
+
+                    if (!(condition is ConditionCounterCreator))
+                        condExpanded++;
+
+                    var before = result.Count;
+
                     Collect(condition, zonesById, nameKey, traderId, gameTime, result);
+
+                    zoneHit += result.Count - before;
                 }
             }
+
+            LastDiag = string.Format(
+                "地图={0} 区域表={1} 本图区域={2} 任务={3} 选中={4} 条件={5}(非counter={6}) 命中={7} 产出={8} | 条件zoneId=[{9}] | 本图zoneId=[{10}]",
+                locationId, zones.Count, zonesById.Count, questTotal, questStarted,
+                condTotal, condExpanded, zoneHit, result.Count,
+                string.Join(",", SampledZoneIds.ToArray()),
+                string.Join(",", new List<string>(zonesById.Keys).ToArray()));
 
             return result;
         }
@@ -105,14 +164,17 @@ namespace GamePanelHUDCompass.VisitApi
             switch (condition)
             {
                 case ConditionLeaveItemAtLocation leave:
+                    Sample(leave.zoneId);
                     Emit(leave.zoneId, leave.id, !leave.IsNecessary, nameKey, traderId, gameTime, zonesById, result);
                     break;
 
                 case ConditionPlaceBeacon beacon:
+                    Sample(beacon.zoneId);
                     Emit(beacon.zoneId, beacon.id, !beacon.IsNecessary, nameKey, traderId, gameTime, zonesById, result);
                     break;
 
                 case ConditionVisitPlace visit:
+                    Sample(visit.target);
                     Emit(visit.target, visit.id, false, nameKey, traderId, gameTime, zonesById, result);
                     break;
 
@@ -122,6 +184,7 @@ namespace GamePanelHUDCompass.VisitApi
 
                     foreach (var zoneId in inZone.zoneIds)
                     {
+                        Sample(zoneId);
                         Emit(zoneId, inZone.id, false, nameKey, traderId, gameTime, zonesById, result);
                     }
 

@@ -125,19 +125,54 @@ namespace GamePanelHUDCompass.VisitApi
             return zone;
         }
 
-        /// <summary>该区域是否覆盖当前地图（忽略大小写，与 VisitAPI 的比对方式一致）。</summary>
+        /// <summary>
+        /// 该区域是否覆盖当前地图。
+        ///
+        /// 内容包里同一张图会混着写 "Shoreline" / "shoreline"、"tarkovstreets" / "TarkovStreets"，
+        /// 归零地更是分 "sandbox" 与 "sandbox_high" 两种（同一张图的不同层，区域坐标是同一套）。
+        /// 只做 OrdinalIgnoreCase 会漏掉这些别名，所以额外做一层地图归一。
+        /// </summary>
         public bool CoversLocation(string locationId)
         {
             if (string.IsNullOrEmpty(locationId))
                 return false;
 
+            var wanted = NormalizeLocation(locationId);
+
             for (var i = 0; i < Locations.Count; i++)
             {
+                if (string.IsNullOrEmpty(Locations[i]))
+                    continue;
+
                 if (string.Equals(Locations[i], locationId, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (string.Equals(NormalizeLocation(Locations[i]), wanted, StringComparison.Ordinal))
                     return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 地图 id 归一：把同一张图的别名收敛到同一个键。
+        /// 归零地的 sandbox 与 sandbox_high 共用一套区域坐标，视为等价。
+        /// </summary>
+        internal static string NormalizeLocation(string location)
+        {
+            if (string.IsNullOrEmpty(location))
+                return string.Empty;
+
+            var value = location.Trim().ToLowerInvariant();
+
+            switch (value)
+            {
+                case "sandbox_high":
+                case "sandboxhigh":
+                    return "sandbox";
+                default:
+                    return value;
+            }
         }
 
         /// <summary>

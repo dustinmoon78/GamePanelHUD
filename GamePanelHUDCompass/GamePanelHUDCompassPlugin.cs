@@ -22,9 +22,14 @@ namespace GamePanelHUDCompass
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"localized\compass")]
     public partial class GamePanelHUDCompassPlugin : BaseUnityPlugin
     {
+        /// <summary>静态日志入口——控制器与构建器都是静态方法，需要能打日志</summary>
+        internal static BepInEx.Logging.ManualLogSource Log;
+
         private void Awake()
         {
             SettingsModel.Create(Config);
+
+            Log = Logger;
 
             // 区域表拉取跑在后台线程，日志源在这里注入，失败时才能看到原因
             VisitApi.VisitZoneClient.Log = Logger;

@@ -74,8 +74,17 @@ namespace GamePanelHUDCompass.Controllers
         /// 每 5 秒按「进行中任务的条件 zoneId」重建一次标记集合，多退少补。
         /// VisitAPI 未安装时客户端拿不到区域表，整段静默跳过，不影响原生标记。
         /// </summary>
+        private static bool _visitZoneEnteredOnce;
+
         private static void RefreshVisitZones(CompassStaticHUDModel compassStaticHUDModel)
         {
+            if (!_visitZoneEnteredOnce)
+            {
+                _visitZoneEnteredOnce = true;
+
+                VisitDiag.Write("ENTER RefreshVisitZones 首次进入（证明本方法确实被调用）");
+            }
+
             if (!SettingsModel.Instance.KeyVisitZone.Value)
                 return;
 
@@ -87,9 +96,20 @@ namespace GamePanelHUDCompass.Controllers
                 compassStaticHUDModel.VisitZonesDirty = true;
             }
 
-            // 区域表还没到手（首次拉取中或未装 VisitAPI）时不要清 dirty，等表到了再建
+            // 区域表还没到手（首次拉取中或未装 VisitAPI）时不要清 dirty，等表到了再建。
+            // 但必须留痕——否则整条链静默，用户只会看到「什么都没发生」。
             if (VisitZoneClient.Zones == null)
+            {
+                if (Time.time - compassStaticHUDModel.VisitZonesLastRefresh >= VisitZoneRefreshInterval)
+                {
+                    compassStaticHUDModel.VisitZonesLastRefresh = Time.time;
+
+                    VisitDiag.Write("AREA-NULL 区域表尚未到手 Attempted=" + VisitZoneClient.Attempted +
+                                    " Loading=" + VisitZoneClient.Loading);
+                }
+
                 return;
+            }
 
             if (!compassStaticHUDModel.VisitZonesDirty)
                 return;
@@ -111,6 +131,11 @@ namespace GamePanelHUDCompass.Controllers
                 hudCoreModel.TheWorld.GameDateTime?.Calculate(),
                 _AbstractQuestControllerClassHelper.Quests,
                 QuestConditionsOf);
+
+            VisitDiag.Write(VisitZoneStaticBuilder.LastDiag);
+
+            GamePanelHUDCompassPlugin.Log?.LogInfo("[Compass] VisitZone 诊断: " +
+                                                   VisitZoneStaticBuilder.LastDiag);
 
             var wanted = new HashSet<string>();
 
@@ -145,28 +170,70 @@ namespace GamePanelHUDCompass.Controllers
         }
 
         /// <summary>
-        /// 展开任务的全部条件——原生 Compass 只处理 NecessaryConditions 顶层的四类条件，
-        /// 这里把 counterCreator 内的 VisitPlace / InZone 也解出来，才能对上 VisitAPI 的 zoneId。
+        /// 展开任务的全部条件。
+        ///
+        /// 用 Conditions[AvailableForFinish] 全量而不是 NecessaryConditions：
+        /// 后者会过滤掉 IsNecessary == false 与 CheckVisibilityStatus 未通过的条件，
+        /// 剧情任务的可选目标正是靠这一层被滤掉，导致 zoneId 一个都拿不到。
+        /// counterCreator 内的 VisitPlace / InZone 也要解出来才能对上 VisitAPI 的 zoneId。
         /// </summary>
         private static IEnumerable<object> QuestConditionsOf(Quest quest)
         {
             var result = new List<object>();
 
-            foreach (var condition in quest.NecessaryConditions)
+            IEnumerable<Condition> conditions;
+
+            try
+            {
+                conditions = quest.Conditions[EQuestStatus.AvailableForFinish];
+            }
+            catch (Exception)
+            {
+                conditions = quest.NecessaryConditions;
+            }
+
+            if (conditions == null)
+                return result;
+
+            foreach (var condition in conditions)
             {
                 result.Add(condition);
 
                 if (!(condition is ConditionCounterCreator counterCreator))
                     continue;
 
-                var templateConditions = _ConditionCounterCreatorHelper.RefTemplateConditions
-                    .GetValue(counterCreator);
-
-                var conditions = _ConditionCounterTemplateHelper.RefConditions.GetValue(templateConditions);
-
-                foreach (var inner in conditions)
+                try
                 {
-                    result.Add(inner);
+                    var templateConditions = _ConditionCounterCreatorHelper.RefTemplateConditions
+                        .GetValue(counterCreator);
+
+                    if (templateConditions == null)
+                    {
+                        VisitDiag.Write("COUNTER-NULL counterCreator 的 _templateConditions 取不到 id=" +
+                                        condition.id);
+
+                        continue;
+                    }
+
+                    var inner = _ConditionCounterTemplateHelper.RefConditions.GetValue(templateConditions);
+
+                    if (inner == null)
+                    {
+                        VisitDiag.Write("COUNTER-CONDS-NULL templateConditions.Conditions 取不到 id=" +
+                                        condition.id);
+
+                        continue;
+                    }
+
+                    foreach (var item in inner)
+                    {
+                        result.Add(item);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VisitDiag.Write("COUNTER-EX counterCreator 展开异常 id=" + condition.id +
+                                    " : " + ex.GetBaseException().Message);
                 }
             }
 
