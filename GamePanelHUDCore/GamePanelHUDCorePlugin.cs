@@ -1,4 +1,4 @@
-﻿#if !UNITY_EDITOR
+#if !UNITY_EDITOR
 
 using BepInEx;
 using GamePanelHUDCore.Attributes;
@@ -6,7 +6,7 @@ using GamePanelHUDCore.Models;
 
 namespace GamePanelHUDCore
 {
-    [BepInPlugin("com.dustinmoon78.gamepanelhudcore", "GamePanelHUDCore", "4.0.0")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudcore", "GamePanelHUDCore", "4.0.2")]
     [BepInDependency("com.dustinmoon78.kmytarkovapi", "2.0.0")]
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"..\localized\core")]
     public class GamePanelHUDCorePlugin : BaseUnityPlugin

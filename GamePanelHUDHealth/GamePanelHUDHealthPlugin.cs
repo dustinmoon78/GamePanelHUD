@@ -1,4 +1,4 @@
-﻿#if !UNITY_EDITOR
+#if !UNITY_EDITOR
 
 using BepInEx;
 using GamePanelHUDCore.Attributes;
@@ -9,8 +9,8 @@ using SettingsModel = GamePanelHUDHealth.Models.SettingsModel;
 
 namespace GamePanelHUDHealth
 {
-    [BepInPlugin("com.dustinmoon78.gamepanelhudhealth", "GamePanelHUDHealth", "4.0.0")]
-    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.0")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudhealth", "GamePanelHUDHealth", "4.0.2")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.2")]
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"localized\health")]
     public partial class GamePanelHUDHealthPlugin : BaseUnityPlugin
     {

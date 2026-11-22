@@ -1,4 +1,4 @@
-﻿#if !UNITY_EDITOR
+#if !UNITY_EDITOR
 
 using BepInEx;
 using EFT.HealthSystem;
@@ -14,8 +14,8 @@ using EFT.Ballistics;
 
 namespace GamePanelHUDHit
 {
-    [BepInPlugin("com.dustinmoon78.gamepanelhudhit", "GamePanelHUDHit", "4.0.0")]
-    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.0")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudhit", "GamePanelHUDHit", "4.0.2")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.2")]
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"localized\hit")]
     public partial class GamePanelHUDHitPlugin : BaseUnityPlugin
     {

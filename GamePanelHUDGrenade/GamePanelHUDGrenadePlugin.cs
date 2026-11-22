@@ -1,4 +1,4 @@
-﻿#if !UNITY_EDITOR
+#if !UNITY_EDITOR
 
 using BepInEx;
 using GamePanelHUDCore.Attributes;
@@ -8,8 +8,8 @@ using SettingsModel = GamePanelHUDGrenade.Models.SettingsModel;
 
 namespace GamePanelHUDGrenade
 {
-    [BepInPlugin("com.dustinmoon78.gamepanelhudgrenade", "GamePanelHUDGrenade", "4.0.0")]
-    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.0")]
+    [BepInPlugin("com.dustinmoon78.gamepanelhudgrenade", "GamePanelHUDGrenade", "4.0.2")]
+    [BepInDependency("com.dustinmoon78.gamepanelhudcore", "4.0.2")]
     [EFTConfigurationPluginAttributes("https://hub.sp-tarkov.com/files/file/652-game-panel-hud", @"localized\grenade")]
     public class GamePanelHUDGrenadePlugin : BaseUnityPlugin
     {
